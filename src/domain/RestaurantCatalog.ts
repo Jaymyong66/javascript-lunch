@@ -1,11 +1,10 @@
 import { ERROR_PREFIX, RESTAURANT_ERROR_MESSAGES } from '../constants/errorMessage';
 import Restaurant, { IRestaurantInfo, ICategory } from './Restaurant';
 
+export const CATEGORY_ALL = '전체';
+export type ICatalogCategory = ICategory | typeof CATEGORY_ALL;
+
 export const SORT_CONDITION: readonly ('이름순' | '거리순')[] = Object.freeze(['이름순', '거리순']);
-
-const ALL_CATEGORY = '전체';
-
-type ICatalogCategory = ICategory | typeof ALL_CATEGORY;
 
 class RestaurantCatalog {
   #restaurants: Restaurant[] = [];
@@ -21,11 +20,11 @@ class RestaurantCatalog {
     this.#restaurants.push(newRestaurant);
   }
 
-  filterByCategory(category: ICatalogCategory) {
-    if (category === ALL_CATEGORY) {
-      return this.#restaurants;
+  static filterByCategory(restaurants: IRestaurantInfo[], category: ICatalogCategory) {
+    if (category === CATEGORY_ALL) {
+      return restaurants;
     }
-    return this.#restaurants.filter((restaurant) => restaurant.getInfo().category === category);
+    return restaurants.filter((restaurant) => restaurant.category === category);
   }
 
   static sortByName(restaurants: IRestaurantInfo[]) {
@@ -44,8 +43,8 @@ class RestaurantCatalog {
     });
   }
 
-  getRestaurants() {
-    return [...this.#restaurants];
+  getTotalRestaurantInfo() {
+    return this.#restaurants.map((res) => res.getInfo());
   }
 }
 
