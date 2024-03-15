@@ -1,52 +1,44 @@
-import { DISTANCE_FROM_CAMPUS, IRestaurantInfo, RESTAURANT_CATEGORY } from '../domain/Restaurant';
-import RestaurantCatalog, { SORT_CONDITION } from '../domain/RestaurantCatalog';
-import { mockingData } from '../domain/mocking';
-import Dropdown from '../view/components/Dropdown';
-import RestaurantCards from '../view/components/RestaurantCards';
+import Dropdown from './components/Dropdown/Dropdown';
+import RestaurantList from './components/RestaurantList';
+import { DISTANCE_FROM_CAMPUS, IRestaurantInfo, RESTAURANT_CATEGORY } from './domain/Restaurant';
+import { SORT_CONDITION } from './domain/RestaurantCatalog';
+import DropdownEvent from './components/Dropdown/DropdownEvent';
+import RestaurantStore from './store/RestaurantStore';
 
-class WebController {
-  #restaurantCatalog: RestaurantCatalog;
+class App {
+  #restaurantStore;
+
+  #restaurantListComponent;
 
   constructor() {
-    this.#restaurantCatalog = new RestaurantCatalog();
+    this.#restaurantStore = new RestaurantStore();
+    this.#restaurantListComponent = new RestaurantList();
   }
 
   run() {
-    this.#initDefaultData();
     this.#renderRestaurants();
     this.#renderFilterDropdowns();
     this.#renderFormDropdowns();
-    this.#formSubmitEventHandler();
-    this.#buttonEventHandler();
+    this.#addEventListeners();
   }
 
-  #initDefaultData() {
-    this.#insertDefaultData();
-    this.#initRestaurantCatalogFromLocalStorage();
-    this.#setLocalStorage();
+  #addEventListeners() {
+    DropdownEvent.addCategoryDropdownEventListener(this.#restaurantListComponent);
+    DropdownEvent.addSortDropdownEventListener(this.#restaurantListComponent);
+    this.#addRestaurantFormEventListener();
+    this.#addModalButtonEventHandler();
   }
 
-  #insertDefaultData() {
-    if (!localStorage.getItem('restaurants')) {
-      mockingData.forEach((data) => {
-        this.#restaurantCatalog.pushNewRestaurant(data);
-      });
+  #renderRestaurants() {
+    const RestaurantListSection = document.getElementById('restaurant-list-section');
+    const restaurantsFromStorage = localStorage.getItem('restaurants');
+
+    if (restaurantsFromStorage && RestaurantListSection) {
+      RestaurantListSection.innerHTML = '';
+      this.#restaurantListComponent.renderRestaurantList(JSON.parse(restaurantsFromStorage));
+
+      RestaurantListSection.appendChild(this.#restaurantListComponent);
     }
-  }
-
-  #initRestaurantCatalogFromLocalStorage() {
-    const localData = localStorage.getItem('restaurants');
-    if (localData) {
-      JSON.parse(localData).forEach((restaurant: any) => {
-        this.#restaurantCatalog.pushNewRestaurant(restaurant);
-      });
-    }
-  }
-
-  #setLocalStorage() {
-    const restaurants = JSON.stringify(this.#restaurantCatalog.getTotalRestaurantInfo());
-
-    localStorage.setItem('restaurants', restaurants);
   }
 
   #renderFilterDropdowns() {
@@ -54,16 +46,6 @@ class WebController {
 
     restaurantFilterDropdownContainer?.appendChild(new Dropdown('category-select', 'category', RESTAURANT_CATEGORY));
     restaurantFilterDropdownContainer?.appendChild(new Dropdown('sort-select', 'sort', SORT_CONDITION));
-  }
-
-  #renderRestaurants() {
-    const restaurantCardsContainer = document.getElementById('restaurant-cards-container');
-    const restaurantsFromStorage = localStorage.getItem('restaurants');
-
-    if (restaurantsFromStorage && restaurantCardsContainer) {
-      restaurantCardsContainer.innerHTML = '';
-      restaurantCardsContainer.appendChild(new RestaurantCards(JSON.parse(restaurantsFromStorage)));
-    }
   }
 
   #renderFormDropdowns() {
@@ -78,7 +60,7 @@ class WebController {
     );
   }
 
-  #formSubmitEventHandler() {
+  #addRestaurantFormEventListener() {
     const addForm = document.getElementById('add-restaurant-form');
 
     addForm?.addEventListener('submit', (event) => {
@@ -103,8 +85,7 @@ class WebController {
 
   #formSubmitEvent(restaurantInfo: IRestaurantInfo) {
     try {
-      this.#restaurantCatalog.pushNewRestaurant(restaurantInfo);
-      this.#updateRestaurantToLocalStorage();
+      this.#restaurantStore.addNewRestaurantToStore(restaurantInfo);
       this.#renderRestaurants();
       this.#closeModal();
     } catch (error: any) {
@@ -112,14 +93,7 @@ class WebController {
     }
   }
 
-  #updateRestaurantToLocalStorage() {
-    if (localStorage.getItem('restaurants') !== null) {
-      localStorage.removeItem('restaurants');
-      this.#setLocalStorage();
-    }
-  }
-
-  #buttonEventHandler() {
+  #addModalButtonEventHandler() {
     const modalCloseButton = document.getElementById('form-modal-close-button');
     modalCloseButton?.addEventListener('click', () => {
       this.#closeModal();
@@ -148,4 +122,4 @@ class WebController {
   }
 }
 
-export default WebController;
+export default App;

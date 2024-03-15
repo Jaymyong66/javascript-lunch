@@ -1,10 +1,12 @@
+import App from './App';
 import '../style.css';
-import WebController from './Controller/WebController';
 
-import Dropdown from './view/components/Dropdown';
-import RestaurantCards from './view/components/RestaurantCards';
+import RestaurantList from './components/RestaurantList';
+import RestaurantCard from './components/RestaurantCard';
+import Dropdown from './components/Dropdown/Dropdown';
 
 window.customElements.define('drop-down', Dropdown, { extends: 'select' });
-window.customElements.define('restaurant-cards', RestaurantCards, { extends: 'ul' });
+window.customElements.define('restaurant-list', RestaurantList, { extends: 'ul' });
+window.customElements.define('restaurant-item', RestaurantCard, { extends: 'li' });
 
-new WebController().run();
+new App().run();
